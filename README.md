@@ -1,9 +1,12 @@
 # MTS-CNN-LSTM SOC Estimation
-**Paper:** Dong et al. (2025) — *"Adaptive SOC estimation of grid-level BESS for multiple operational scenarios"*, Journal of Energy Storage
+
+**Paper:** Dong et al. — *"Adaptive SOC estimation of grid-level BESS for multiple operational scenarios"*, Journal of Energy Storage
 
 ---
 
 ## Project Structure
+
+```text
 soc_estimation/
 ├── battery-data.csv          ← your dataset
 ├── config.py                 ← all hyperparameters and file paths
@@ -16,11 +19,15 @@ soc_estimation/
 ├── paper_figures.py          ← paper-exact Fig 8–13
 ├── main.py                   ← entry point, runs everything in order
 └── figures/                  ← all saved output figures (auto-created)
+```
+
 ---
 
 ## Requirements
 
 ### `requirements.txt`
+
+```txt
 torch>=2.0.0
 pandas>=1.5.0
 numpy>=1.23.0
@@ -28,6 +35,8 @@ scikit-learn>=1.2.0
 matplotlib>=3.6.0
 scipy>=1.9.0
 tqdm>=4.65.0
+```
+
 ### Install
 
 ```bash
@@ -39,7 +48,7 @@ pip install pandas numpy scikit-learn matplotlib scipy tqdm
 pip install -r requirements.txt
 ```
 
-> For GPU, get your torch install command from [pytorch.org](https://pytorch.org/get-started/locally/)
+> For GPU, get your torch install command from https://pytorch.org/get-started/locally/
 
 ---
 
@@ -87,9 +96,6 @@ Saved to the `figures/` folder:
 
 | Figure | File | Description |
 |---|---|---|
-| Fig 1 | `fig1_working_curves.png` | Voltage, current, SOC over 2 days |
-| Fig 2 | `fig2_decoupling.png` | Original vs peak-shaving vs freq-reg current |
-| Fig 4 | `fig4_plateau_region.png` | Voltage plateau region zoom |
 | Fig 8 | `fig8_lab_model_comparison.png` | Lab test: MTS-CNN-LSTM vs MTS-TCN vs MTS-CNN |
 | Fig 9 | `fig9_decoupling_comparison.png` | 5 decoupling strategies compared |
 | Fig 10 | `fig10_error_regions.png` | Voltage/current/SOC in high-error regions |
@@ -114,16 +120,16 @@ Saved to the `figures/` folder:
 ---
 
 ## Estimated Runtime (CPU)
-
 | Stage | Time |
 |---|---|
-| Data loading + decoupling | ~1 min |
-| MTS-CNN-LSTM training | ~2–4 hours |
-| Baseline + ablation (8 models) | ~1–2 hours |
-| Figure generation | ~1 min |
-| **Total** | **~3–6 hours** |
+| Data loading + decoupling | ~5 min |
+| MTS-CNN-LSTM training (100 epochs) | ~19–24 hours |
+| Baseline + ablation (8 models) | ~10–12 hours |
+| Figure generation | ~2 min |
+| **Total** | **~30–36 hours** |
 
-To speed up, reduce `T1/T2/T3` and `EPOCHS` in `config.py`:
+To speed up(but model wont give accurate output), reduce `T1/T2/T3` and `EPOCHS` in `config.py`:
+
 ```python
 T1, T2, T3 = 300, 150, 50   # faster, slightly less accurate
 EPOCHS = 30
@@ -132,18 +138,7 @@ ABLATION_EPOCHS = 10
 
 ---
 
-## Common Errors
-
-| Error | Fix |
-|---|---|
-| `FileNotFoundError` | Update `DATA_PATH` in `config.py` |
-| `ValueError: Cannot find columns` | Set `COL_VOLTAGE/COL_CURRENT/COL_SOC` to your actual CSV column names |
-| `ModuleNotFoundError` | Run `pip install -r requirements.txt` |
-| Training very slow | Reduce `T1/T2/T3` and `EPOCHS` in `config.py` |
-
----
-
 ## Paper Reference
 
-> Jiawei Dong et al. *"Adaptive SOC estimation of grid-level BESS for multiple operational scenarios."*
-> Journal of Energy Storage, 2025. DOI: [10.1016/j.est.2025.117776](https://doi.org/10.1016/j.est.2025.117776)
+> Jiawei Dong et al. *"Adaptive SOC estimation of grid-level BESS for multiple operational scenarios."*  
+> Journal of Energy Storage. 
