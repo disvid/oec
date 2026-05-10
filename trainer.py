@@ -1,7 +1,3 @@
-# =============================================================================
-# trainer.py  –  Training loop with tqdm progress bars and live metrics.
-# =============================================================================
-
 import os
 import time
 import numpy as np
@@ -58,7 +54,6 @@ class Trainer:
         print(f"[Trainer] Device : {self.device}")
         print(f"[Trainer] Params : {total:,}")
 
-    # ── One epoch ──────────────────────────────────────────────────────
     def _epoch(self, loader, train: bool, desc: str = "") -> float:
         self.model.train(train)
         total_loss = 0.0
@@ -96,7 +91,6 @@ class Trainer:
         bar.close()
         return total_loss / max(n_samples, 1)
 
-    # ── Full training loop ─────────────────────────────────────────────
     def fit(self, tr_loader, val_loader) -> dict:
         best_val   = np.inf
         t0         = time.time()
@@ -129,7 +123,6 @@ class Trainer:
                 torch.save(self.model.state_dict(), self.ckpt)
                 saved = "✓ saved"
 
-            # Colour codes: green if improving, yellow if patience counting
             patience_info = (f"patience {self.es.counter}/{self.es.patience}"
                              if self.es.counter > 0 else "")
             print(f"  {ep:6d}  {tr_l:10.6f}  {val_l:10.6f}  "
@@ -145,12 +138,10 @@ class Trainer:
         print(f"  Training complete in {elapsed//60}m{elapsed%60:02d}s  |  "
               f"Best val MSE = {best_val:.6f}")
 
-        # Restore best weights
         self.model.load_state_dict(
             torch.load(self.ckpt, map_location=self.device))
         return self.history
 
-    # ── Inference ──────────────────────────────────────────────────────
     @torch.no_grad()
     def predict(self, loader) -> np.ndarray:
         self.model.eval()
