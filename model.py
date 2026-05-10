@@ -1,15 +1,6 @@
-# =============================================================================
-# model.py  –  MTS-CNN-LSTM + ablation models
-#
-# Key fix: SingleBranchModel no longer ignores x2/x3.
-# The ablation runner passes the RIGHT time-scale window as x1,
-# and SingleBranchModel uses only x1.
-# =============================================================================
-
 import torch
 import torch.nn as nn
 import config
-
 
 class DualKernelCNN(nn.Module):
     """
@@ -93,13 +84,6 @@ class MTS_CNN_LSTM(nn.Module):
         ao, _ = self.attn(proj, proj, proj)
         return self.head(ao.squeeze(1))
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-# SingleBranchModel
-# -----------------
-# IMPORTANT: only uses x1. The ablation runner is responsible for passing
-# the correct time-scale window as x1 for each branch experiment.
-# ─────────────────────────────────────────────────────────────────────────────
 class SingleBranchModel(nn.Module):
     def __init__(self, in_feat=3, cnn_out=config.CNN_OUT,
                  hidden=config.HIDDEN_SIZE,
@@ -128,10 +112,6 @@ class SingleBranchModel(nn.Module):
         _, (h, _) = self.lstm(z)
         return self.head(self.drop(h[-1]))
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-# TCN baseline
-# ─────────────────────────────────────────────────────────────────────────────
 class _TCNBlock(nn.Module):
     def __init__(self, ch, k=3, dilation=1, dropout=0.2):
         super().__init__()
