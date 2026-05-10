@@ -1,11 +1,3 @@
-# =============================================================================
-# data_processor.py  –  Load → Decouple → Normalise → Window → Loaders
-#
-# Key addition: get_single_branch_loaders(timestep)
-#   Returns loaders where x1 = window of given length, x2=x3=dummy.
-#   Used so SingleBranchModel ablations get correctly-sized inputs.
-# =============================================================================
-
 import os
 import numpy as np
 import pandas as pd
@@ -43,7 +35,6 @@ class DataProcessor:
         self.Y_test = None
         self.n_train = self.n_val = None
 
-    # ── Load ───────────────────────────────────────────────────────────
     def load(self):
         print(f"\n[DataProcessor] Loading '{self.csv_path}' …")
         df = pd.read_csv(self.csv_path)
@@ -80,7 +71,6 @@ class DataProcessor:
               f"SOC: {self.soc.min()*100:.1f}%–{self.soc.max()*100:.1f}%")
         return self
 
-    # ── Decouple ───────────────────────────────────────────────────────
     def decouple(self):
         print("\n[DataProcessor] Decoupling current …")
         N    = len(self.current)
@@ -122,7 +112,6 @@ class DataProcessor:
               f"I_fr [{I_fr.min():.2f}, {I_fr.max():.2f}]")
         return self
 
-    # ── Normalise ──────────────────────────────────────────────────────
     def normalise(self):
         print("\n[DataProcessor] Normalising …")
         n_tr = int(len(self.voltage) * config.TRAIN_RATIO)
@@ -139,7 +128,6 @@ class DataProcessor:
         print("  ✓ Done")
         return self
 
-    # ── Build windows (static, reusable) ───────────────────────────────
     @staticmethod
     def _make_windows(v, ps, fr, soc, t1, t2, t3):
         """
@@ -184,7 +172,6 @@ class DataProcessor:
         bar.close()
         return X, Y
 
-    # ── Standard loaders (3-branch MTS model) ─────────────────────────
     def get_loaders(self):
         self.load().decouple().normalise()
 
@@ -213,14 +200,12 @@ class DataProcessor:
         print(f"\n  ✓ train={n_tr:,}  val={n_val:,}  test={n-n_tr-n_val:,}")
         return tr, val, te
 
-    # ── Single-branch loaders (ablation) ──────────────────────────────
     def get_single_branch_loaders(self, timestep: int):
         """
         Returns (tr_loader, val_loader, te_loader, Y_test) where every
         sample has shape (timestep, 3).  x1=window, x2=x3=zero dummies.
         The SingleBranchModel only reads x1, so dummies are never used.
         """
-        # Normalised arrays must already be built (call get_loaders first)
         assert self.voltage_norm is not None, "Call get_loaders() first."
 
         X, Y = self._make_single_windows(
@@ -231,7 +216,6 @@ class DataProcessor:
         n_tr  = int(n * config.TRAIN_RATIO)
         n_val = int(n * config.VAL_RATIO)
 
-        # Dummy tensors for x2 / x3 (shape doesn't matter, never accessed)
         dummy = np.zeros((1,1,3), dtype=np.float32)
 
         def _ld(x, y, sh):
