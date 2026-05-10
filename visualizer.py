@@ -1,24 +1,3 @@
-# =============================================================================
-# visualizer.py  –  Reproduces paper figures exactly as shown in the PDF.
-#
-# Exact observations from each figure:
-#   Fig  8: x="Time (s)", y=SOC 20-80%, legend top-left inside box,
-#           Real SOC=dark-red, MTS-CNN-LSTM=orange, MTS-TCN=cyan, MTS-CNN=navy
-#           Panel (a) = full test, Panel (b) = first 12000 s zoom
-#   Fig  9: x="Time (min)", y=SOC 10-70%, 6 curves, legend top-left,
-#           Panel (a) = full test, Panel (b) = fixed zoom 1800–3400 min
-#           Region labels I II III IV on panel (b)
-#   Fig 10: 3-panel vertical (Current blue / Voltage green / SOC red),
-#           NO model prediction curves – raw data only + I II III IV on SOC
-#           x="Time (min)", time range ≈ 1200–3600 min
-#   Fig 11: x="Time (min)", y=10-70%, legend "MTSCNN-LSTM" (no dash),
-#           "CNN-LSTM(Time Steps=100min/300min/600min)"
-#           Panel (b) zooms 3600–5000 min
-#   Fig 12: Same as Fig 11 but kernel=7
-#   Fig 13: x="Time (min)", y=10-70%, same colours as Fig 8,
-#           Panel (b) zooms 5000–6400 min
-# =============================================================================
-
 import os
 import numpy as np
 import matplotlib
@@ -57,26 +36,21 @@ plt.rcParams.update({
     "ytick.major.size":     3,
 })
 
-# ── Exact colours from the paper figures ─────────────────────────────────────
-# Fig 8 / Fig 13
 COL_REAL    = "#8B1A1A"   # very dark red  – Real SOC
 COL_MTS     = "#E07030"   # orange         – MTS-CNN-LSTM / Proposed
 COL_TCN     = "#00BFBF"   # teal/cyan      – MTS-TCN
 COL_CNN_MTS = "#1A237E"   # dark navy      – MTS-CNN
 
-# Fig 9 decoupling colours (reading from left-to-right in legend)
 COL_PROPOSED = "#C0392B"  # red-ish        – Proposed method
 COL_FOURIER  = "#1ABC9C"  # teal           – Fourier decoupling
 COL_EMD      = "#2980B9"  # steel blue     – EMD decoupling
 COL_DWT      = "#E91E8C"  # magenta-pink   – Discrete wavelet decoupling
 COL_NODEC    = "#6A0DAD"  # purple         – No decoupling
 
-# Fig 10 panel colours
 COL_CURRENT = "#1565C0"   # blue   – current
 COL_VOLTAGE = "#2E7D32"   # green  – voltage
 COL_SOC_RAW = "#C62828"   # red    – SOC
 
-# Fig 11/12 single-branch colours
 COL_SB_100  = "#1A237E"   # dark blue  – T=100
 COL_SB_300  = "#26A69A"   # teal       – T=300
 COL_SB_600  = "#6A1B9A"   # purple     – T=600
@@ -88,10 +62,6 @@ def _save(fig, name):
     plt.close(fig)
     print(f"[Visualizer] Saved → {path}")
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Fig. 1  –  Two-day Voltage / Current / SOC working curves
-# ─────────────────────────────────────────────────────────────────────────────
 def plot_working_curves(voltage, current, soc, n_days=2):
     samples = min(n_days * 24 * 60, len(voltage))
     t = np.arange(samples) / 60      # hours
@@ -114,10 +84,6 @@ def plot_working_curves(voltage, current, soc, n_days=2):
     axes[0].set_title("Voltage, Current, and SOC Working Curves (Two-Day Period)")
     _save(fig, "fig1_working_curves.png")
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Fig. 2  –  Decoupling result
-# ─────────────────────────────────────────────────────────────────────────────
 def plot_decoupling(current, I_ps, I_fr, n_minutes=1800):
     n = min(n_minutes, len(current))
     t = np.arange(n)
@@ -139,10 +105,6 @@ def plot_decoupling(current, I_ps, I_fr, n_minutes=1800):
     axes[0].set_title("(a) Proposed Current Decoupling Method")
     _save(fig, "fig2_decoupling.png")
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Fig. 4  –  Plateau region
-# ─────────────────────────────────────────────────────────────────────────────
 def plot_plateau_region(voltage, soc, start=500, length=300):
     end   = min(start + length, len(voltage))
     t     = np.arange(end - start)
@@ -172,10 +134,6 @@ def plot_plateau_region(voltage, soc, start=500, length=300):
     ax1.set_title("Plateau Region of BESS Voltage–SOC Curve")
     _save(fig, "fig4_plateau_region.png")
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-# CORE HELPER – two-panel SOC comparison (used by Figs 8, 9, 11, 12, 13)
-# ─────────────────────────────────────────────────────────────────────────────
 def _two_panel(y_true_pct, pred_dict, fname,
                title_a, title_b,
                xlabel_a, xlabel_b,
@@ -183,16 +141,7 @@ def _two_panel(y_true_pct, pred_dict, fname,
                ylim=(10, 80),
                region_labels=None,   # list of (x_in_b_coords, label_str)
                legend_loc="upper left"):
-    """
-    Generic two-panel comparison plot.
-
-    Parameters
-    ----------
-    y_true_pct  : 1-D array, already in % units
-    pred_dict   : OrderedDict {label: (array_pct, color, linestyle, linewidth)}
-    xlim_a/b    : (xmin, xmax) in the x-axis units used for each panel
-    region_labels : [(x, text), ...] drawn as text annotations on panel (b)
-    """
+ 
     N      = len(y_true_pct)
     t_mins = np.arange(N)   # time axis in minutes (or seconds for fig8)
 
@@ -248,12 +197,6 @@ def _two_panel(y_true_pct, pred_dict, fname,
 
     _save(fig, fname)
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Fig. 8  –  Lab: MTS-CNN-LSTM vs MTS-TCN vs MTS-CNN
-#            x-axis = Time (s)  (multiply minutes by 60)
-#            Panel (a): 0–42000 s    Panel (b): 0–12000 s
-# ─────────────────────────────────────────────────────────────────────────────
 def plot_fig8_model_comparison(y_test, pred_mts, pred_tcn, pred_cnn):
     # Convert to % if needed
     def _pct(a): return a * 100 if np.asarray(a).max() <= 1.5 else np.asarray(a)
@@ -309,18 +252,11 @@ def plot_fig8_model_comparison(y_test, pred_mts, pred_tcn, pred_cnn):
 
     _save(fig, "fig8_lab_model_comparison.png")
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Fig. 9  –  Decoupling strategy comparison
-#            x-axis = Time (min)
-#            Panel (a): 0–8100 min    Panel (b): 1800–3400 min  +  I II III IV
-# ─────────────────────────────────────────────────────────────────────────────
 def plot_fig9_decoupling_strategy(y_test, dec_preds):
     def _pct(a): return a * 100 if np.asarray(a).max() <= 1.5 else np.asarray(a)
     y_pct = _pct(y_test)
     N     = len(y_pct)
 
-    # Legend order matches the paper top-to-bottom
     legend_order = [
         ("Proposed method",          COL_PROPOSED),
         ("Fourier decoupling",        COL_FOURIER),
@@ -328,7 +264,6 @@ def plot_fig9_decoupling_strategy(y_test, dec_preds):
         ("Discrete wavelet decoupling", COL_DWT),
         ("No decoupling",             COL_NODEC),
     ]
-    # Map internal keys to display names
     key_to_display = {
         "Proposed method": "Proposed method",
         "Fourier dec.":    "Fourier decoupling",
@@ -345,14 +280,10 @@ def plot_fig9_decoupling_strategy(y_test, dec_preds):
             p = _pct(dec_preds[internal_key])
             pred_dict[display_name] = (p, color, "--", 0.85)
 
-    # Panel (b) zoom: 1800–3400 min.  Region labels at plateau dips.
-    # Find dip positions within [1800,3400] automatically from Real SOC
+
     zoom_s, zoom_e = 1800, min(3400, N)
     seg = y_pct[zoom_s:zoom_e]
 
-    # Find 4 locally-low regions (discharge troughs and flat tops)
-    # We label flat-top regions (local maxima) as I, III, IV and trough as II
-    # Heuristic: find 4 representative x positions from the paper layout
     region_x = _find_region_labels(y_pct, zoom_s, zoom_e)
 
     xlim_a = (0, N)
@@ -390,7 +321,6 @@ def plot_fig9_decoupling_strategy(y_test, dec_preds):
             ax.legend(loc="upper left", fontsize=7.5,
                       handlelength=1.8, labelspacing=0.25)
 
-    # Region labels on panel (b)
     if region_x:
         labels = ["I", "II", "III", "IV"]
         ylim_top = ax_b.get_ylim()[1]
@@ -405,11 +335,6 @@ def plot_fig9_decoupling_strategy(y_test, dec_preds):
 
 
 def _find_region_labels(y_pct, zoom_s, zoom_e):
-    """
-    Automatically find 4 representative x positions within [zoom_s, zoom_e]
-    for the I II III IV region labels on Fig 9 panel (b).
-    Returns a list of 4 absolute indices.
-    """
     seg   = y_pct[zoom_s:zoom_e]
     N_seg = len(seg)
     if N_seg < 4:
@@ -425,25 +350,12 @@ def _find_region_labels(y_pct, zoom_s, zoom_e):
             positions.append(zoom_s + i*q + int(np.argmax(chunk)))
     return positions
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Fig. 10  –  Current / Voltage / SOC in high-error regions
-#             3-panel vertical; NO prediction lines – raw signals only
-#             x-axis "Time (min)", range ≈ 1200–3600 min
-#             I II III IV on SOC panel at local maxima / around troughs
-# ─────────────────────────────────────────────────────────────────────────────
 def plot_fig10_error_regions(voltage, current, soc,
                               t_start_abs=1200, t_end_abs=3600):
-    """
-    Parameters
-    ----------
-    voltage, current, soc : full-length arrays (from dp)
-    t_start_abs, t_end_abs : absolute minute indices for the zoom window
-    """
     N   = len(soc)
     s   = max(0, t_start_abs)
     e   = min(N, t_end_abs)
-    t   = np.arange(s, e)          # absolute time axis (minutes)
+    t   = np.arange(s, e)          
 
     soc_pct = soc[s:e] * 100 if soc.max() <= 1.0 else soc[s:e]
     v_seg   = voltage[s:e]
@@ -453,7 +365,6 @@ def plot_fig10_error_regions(voltage, current, soc,
     fig.subplots_adjust(hspace=0.06, left=0.14, right=0.95,
                         top=0.97, bottom=0.07)
 
-    # ── Current ────────────────────────────────────────────────────────
     axes[0].plot(t, i_seg, color=COL_CURRENT, lw=0.55)
     axes[0].set_ylabel("Current (A)", fontsize=9)
     # Match paper y-limits (symmetric ±50 A)
@@ -462,7 +373,6 @@ def plot_fig10_error_regions(voltage, current, soc,
     axes[0].yaxis.set_major_locator(ticker.MultipleLocator(
         round(i_max / 2 / 5) * 5 or 10))
 
-    # ── Voltage ────────────────────────────────────────────────────────
     axes[1].plot(t, v_seg, color=COL_VOLTAGE, lw=0.65)
     axes[1].set_ylabel("Voltage (V)", fontsize=9)
     # Give a bit of padding around the voltage range
@@ -470,15 +380,12 @@ def plot_fig10_error_regions(voltage, current, soc,
     pad  = (v_hi - v_lo) * 0.15 + 0.1
     axes[1].set_ylim(v_lo - pad, v_hi + pad)
 
-    # ── SOC ────────────────────────────────────────────────────────────
     axes[2].plot(t, soc_pct, color=COL_SOC_RAW, lw=1.0)
     axes[2].set_ylabel("SOC (%)", fontsize=9)
     axes[2].set_xlabel("Time (min)", fontsize=9)
     soc_lo = soc_pct.min();  soc_hi = soc_pct.max()
     axes[2].set_ylim(soc_lo - 5, soc_hi + 5)
 
-    # ── Region labels I II III IV on the SOC panel ─────────────────────
-    # Divide the window into 4 segments; pick flat top (I,III,IV) or min (II)
     seg_len = len(soc_pct)
     q       = seg_len // 4
     region_chars = ["I", "II", "III", "IV"]
@@ -499,14 +406,6 @@ def plot_fig10_error_regions(voltage, current, soc,
 
     axes[0].set_xlim(s, e)
     _save(fig, "fig10_error_regions.png")
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Fig. 11  –  Kernel=1 single-branch ablation
-#             Legend: "MTSCNN-LSTM", "CNN-LSTM(Time Steps=100min)" etc.
-#             Panel (a): full test (0–8100 min)
-#             Panel (b): 3600–5000 min
-# ─────────────────────────────────────────────────────────────────────────────
 def plot_fig11_kernel1_ablation(y_test, pred_mts, ab_results):
     _plot_single_branch_fig(
         y_test, pred_mts, ab_results,
@@ -594,12 +493,6 @@ def _plot_single_branch_fig(y_test, pred_mts, ab_results, kernel, fname, fig_num
 
     _save(fig, fname)
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Fig. 13  –  Real-world: MTS-CNN-LSTM vs MTS-TCN vs MTS-CNN
-#             x-axis = Time (min)
-#             Panel (a): 0–8100 min    Panel (b): 5000–6400 min
-# ─────────────────────────────────────────────────────────────────────────────
 def plot_fig13_model_comparison(y_test, pred_mts, pred_tcn, pred_cnn):
     def _pct(a): return a * 100 if np.asarray(a).max() <= 1.5 else np.asarray(a)
     y_pct = _pct(y_test)
@@ -650,10 +543,6 @@ def plot_fig13_model_comparison(y_test, pred_mts, pred_tcn, pred_cnn):
 
     _save(fig, "fig13_realworld_comparison.png")
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Training loss (bonus)
-# ─────────────────────────────────────────────────────────────────────────────
 def plot_training_history(history: dict):
     fig, ax = plt.subplots(figsize=(8, 4))
     ax.plot(history["train"], color=COL_MTS, label="Train MSE")
