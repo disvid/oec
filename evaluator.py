@@ -1,9 +1,3 @@
-# =============================================================================
-# evaluator.py  –  Metrics + ablation + decoupling comparison.
-# Fix: single-branch ablation uses get_single_branch_loaders(timestep)
-#      so each model sees the correct window length.
-# =============================================================================
-
 import os
 import numpy as np
 import torch
@@ -13,8 +7,6 @@ from trainer import Trainer
 from data_processor import DataProcessor
 from tqdm import tqdm
 
-
-# ── Shape-safe metric helpers ────────────────────────────────────────────────
 def _align(y, yhat):
     n = min(len(y.ravel()), len(yhat.ravel()))
     return y.ravel()[:n], yhat.ravel()[:n]
@@ -41,8 +33,6 @@ def print_metrics(y_true, y_pred, label=""):
     print(f"  └{'─'*43}┘")
     return m
 
-
-# ── Quick-train helper ───────────────────────────────────────────────────────
 def quick_train(model, tr_loader, val_loader, te_loader,
                 epochs=None, label=""):
     if epochs is None:
@@ -65,8 +55,6 @@ def quick_train(model, tr_loader, val_loader, te_loader,
     if os.path.exists(ckpt): os.remove(ckpt)
     return pred
 
-
-# ── Single-branch ablation  ──────────────────────────────────────────────────
 def run_single_branch_ablation(dp: DataProcessor):
     """
     Train 6 single-branch CNN-LSTM models (kernel=1 and kernel=7, each at
@@ -107,7 +95,6 @@ def run_single_branch_ablation(dp: DataProcessor):
     return results
 
 
-# ── Decoupling strategy comparison ──────────────────────────────────────────
 def run_decoupling_comparison(dp: DataProcessor):
     from current_decoupler import CurrentDecoupler
     from sklearn.preprocessing import MinMaxScaler
