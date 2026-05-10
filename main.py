@@ -1,7 +1,3 @@
-# =============================================================================
-# main.py  –  Entry point  (produces paper-exact Figs 8-13)
-# =============================================================================
-
 import os, time
 import numpy as np
 import torch
@@ -28,20 +24,17 @@ def main():
     print(f"  PyTorch {torch.__version__}  |  "
           f"{'GPU ✓' if torch.cuda.is_available() else 'CPU'}")
 
-    # ── STEP 1: Data ─────────────────────────────────────────────────
     _banner("STEP 1 / 6  –  Data Loading & Preprocessing")
     dp = DataProcessor()
     tr_loader, val_loader, te_loader = dp.get_loaders()
     Y_test = dp.Y_test.ravel()
 
-    # ── STEP 2: Diagnostic plots (Figs 1, 2, 4) ──────────────────────
     _banner("STEP 2 / 6  –  Diagnostic Figures (Fig 1, 2, 4)")
     VIS.plot_working_curves(dp.voltage, dp.current, dp.soc)
     VIS.plot_decoupling(dp.current, dp.I_ps, dp.I_fr)
     VIS.plot_plateau_region(dp.voltage, dp.soc)
     print("  ✓ Saved.")
 
-    # ── STEP 3: Train proposed model ──────────────────────────────────
     _banner("STEP 3 / 6  –  Training MTS-CNN-LSTM (proposed)")
     main_model = MTS_CNN_LSTM()
     trainer    = Trainer(main_model)
@@ -52,7 +45,6 @@ def main():
     pred_main, Y_te = _align(pred_main_raw, Y_test)
     print_metrics(Y_te, pred_main, "MTS-CNN-LSTM (proposed)")
 
-    # ── STEP 4: Baseline models ───────────────────────────────────────
     _banner("STEP 4 / 6  –  Baseline Models")
 
     print("\n  [4a] MTS-TCN …")
@@ -67,7 +59,6 @@ def main():
     pred_cnn, _ = _align(pred_cnn_raw, Y_te)
     print_metrics(Y_te, pred_cnn, "MTS-CNN")
 
-    # ── STEP 5: Ablation + Decoupling comparison ──────────────────────
     _banner("STEP 5 / 6  –  Single-Branch Ablation + Decoupling Comparison")
 
     print("\n  [5a] Single-branch kernel ablation …")
@@ -83,30 +74,20 @@ def main():
         dec_preds[name] = p
         print_metrics(Y_te, p, name)
 
-    # ── STEP 6: All paper figures ─────────────────────────────────────
     _banner("STEP 6 / 6  –  Generating Paper Figures")
 
-    # ── Fig. 8  ─────────────────────────────────────────────────────
     print("  Plotting Fig 8 …")
     VIS.plot_fig8_model_comparison(Y_te, pred_main, pred_tcn, pred_cnn)
 
-    # ── Fig. 9  ─────────────────────────────────────────────────────
     print("  Plotting Fig 9 …")
     VIS.plot_fig9_decoupling_strategy(Y_te, dec_preds)
 
-    # ── Fig. 10  ────────────────────────────────────────────────────
-    # Fig 10 plots RAW voltage/current/soc (not predictions) zoomed to
-    # the high-error region.  We use the absolute time range from the
-    # full arrays (not the test-window offset) so colours/scales match.
     print("  Plotting Fig 10 …")
-    # Find the test window start in the full series
-    offset  = config.T1                    # windows start after T1 samples
+    offset  = config.T1                   
     N_full  = len(dp.soc)
     N_te    = len(Y_te)
-    # High-error region: pick middle third of the test set
     err_abs_start = offset + int(N_te * 0.30)
     err_abs_end   = offset + int(N_te * 0.75)
-    # Clamp to available data
     err_abs_start = min(err_abs_start, N_full - 500)
     err_abs_end   = min(err_abs_end,   N_full)
 
@@ -116,15 +97,12 @@ def main():
         t_end_abs   = err_abs_end,
     )
 
-    # ── Fig. 11  ────────────────────────────────────────────────────
     print("  Plotting Fig 11 …")
     VIS.plot_fig11_kernel1_ablation(Y_te, pred_main, ab_results)
 
-    # ── Fig. 12  ────────────────────────────────────────────────────
     print("  Plotting Fig 12 …")
     VIS.plot_fig12_kernel7_ablation(Y_te, pred_main, ab_results)
 
-    # ── Fig. 13  ────────────────────────────────────────────────────
     print("  Plotting Fig 13 …")
     VIS.plot_fig13_model_comparison(Y_te, pred_main, pred_tcn, pred_cnn)
 
