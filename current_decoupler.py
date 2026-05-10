@@ -1,9 +1,5 @@
-# =============================================================================
 # current_decoupler.py
-#
 # Implements the scenario-adaptive dynamic threshold current decoupling
-# algorithm described in Section 3.1 of Dong et al. (2025).
-#
 # Algorithm
 # ---------
 # For each time step t:
@@ -18,7 +14,6 @@
 # =============================================================================
 
 import numpy as np
-
 
 class CurrentDecoupler:
     """
@@ -44,7 +39,6 @@ class CurrentDecoupler:
         self.lambda2           = lambda2
         self.fluctuation_limit = fluctuation_limit
 
-    # ------------------------------------------------------------------
     def run(self, current: np.ndarray):
         """
         Parameters
@@ -61,7 +55,7 @@ class CurrentDecoupler:
         I_fr = np.zeros(N, dtype=np.float32)
 
         I_stable      = float(current[0])
-        fluc_duration = 0          # consecutive steps in fluctuation mode
+        fluc_duration = 0         
 
         for t in range(N):
             # ── Step 1: compute dynamic threshold ────────────────────────
@@ -99,13 +93,10 @@ class CurrentDecoupler:
 
         return I_ps, I_fr
 
-    # ------------------------------------------------------------------
-    # Alternative "no decoupling" baseline: return raw current as PS, zeros as FR
     @staticmethod
     def no_decoupling(current: np.ndarray):
         return current.copy().astype(np.float32), np.zeros_like(current, dtype=np.float32)
 
-    # Alternative "static threshold" baseline
     @staticmethod
     def static_threshold(current: np.ndarray, threshold: float = 5.0):
         I_ps = np.where(np.abs(current) <= threshold, current, 0.0).astype(np.float32)
